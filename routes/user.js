@@ -1,8 +1,8 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { User } from "../models/userr.js";
+import { Applied } from "../models/Applied.js";
 const router  = express.Router()
 
 router.post("/signup",async (req,res)=>{
@@ -40,16 +40,47 @@ const verifyUser =async (req,res,next)=>{
    if (!token) {
     return res.json({ status: false , message: 'Auth failed' });
    } 
-   const decode =await jwt.verify(token, process.env.KEY);
+   const decoded =await jwt.verify(token, process.env.KEY);
+   req.user = decoded;
    next()
     } catch (error) {
         
     }
    
 }
+router.post('/apply',verifyUser, async (req, res) => {
+    try {
+        const { opportunity } = req.body;
+        console.log(req.user);
+        const appliedOpportunity = new Applied({
+            userId: req.user.username,
+            id:opportunity.id,
+            profile_name: opportunity.profile_name,
+            stipend:opportunity.stipend.salary,
+            company_name: opportunity.company_name,
+            duration: opportunity.duration,
+        });
+        await appliedOpportunity.save();
+        res.status(201).json({ message: 'Opportunity applied successfully.' });
+    } catch (error) {
+        console.error('Error applying for opportunity:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 router.get("/verify",verifyUser,(req,res)=>{
+    
   return res.json({status:true,message:"Authorized"})
 })
+router.get('/applied-opportunities', verifyUser, async (req, res) => {
+    try {
+        
+        const appliedOpportunities = await Applied.find({ userId: req.user.username });
+        res.json(appliedOpportunities);
+    } catch (error) {
+        console.error('Error fetching applied opportunities:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 router.get("/logout",(req,res)=>{
     res.clearCookie('token');
     return res.json({status: true, message:'Logged out Successfully!'})
