@@ -29,9 +29,9 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch((e) => {
     console.log(e);
   });
-  app.use(express.static(path.join(__dirname, '/buildd')));
+  app.use(express.static(path.join(__dirname, '/builddd')));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname+'/buildd/index.html'));
+    res.sendFile(path.join(__dirname+'/builddd/index.html'));
   });
 app.listen(process.env.PORT,()=>{
     console.log("Server is running on port 3000")
